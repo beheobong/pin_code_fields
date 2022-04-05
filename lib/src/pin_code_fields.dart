@@ -435,38 +435,7 @@ class _PinCodeTextFieldState extends State<PinCodeTextField>
       _textEditingController = widget.controller;
     }
 
-    _textEditingController?.addListener(() {
-      if (widget.useHapticFeedback) {
-        runHapticFeedback();
-      }
-
-      if (isInErrorMode) {
-        setState(() => isInErrorMode = false);
-      }
-
-      _debounceBlink();
-
-      var currentText = _textEditingController!.text;
-
-      if (widget.enabled && _inputList.join("") != currentText) {
-        if (currentText.length >= widget.length) {
-          if (widget.onCompleted != null) {
-            if (currentText.length > widget.length) {
-              // removing extra text longer than the length
-              currentText = currentText.substring(0, widget.length);
-            }
-            //  delay the onComplete event handler to give the onChange event handler enough time to complete
-            Future.delayed(Duration(milliseconds: 300),
-                () => widget.onCompleted!(currentText));
-          }
-
-          if (widget.autoDismissKeyboard) _focusNode!.unfocus();
-        }
-        widget.onChanged(currentText);
-      }
-
-      _setTextToInput(currentText);
-    });
+    _textEditingController?.addListener(_listenter);
   }
 
   void _debounceBlink() {
@@ -496,6 +465,7 @@ class _PinCodeTextFieldState extends State<PinCodeTextField>
   @override
   void dispose() {
     if (widget.autoDisposeControllers) {
+      _textEditingController!.removeListener(_listenter);
       _textEditingController!.dispose();
       _focusNode!.dispose();
       // if (!kReleaseMode) {
@@ -959,6 +929,39 @@ class _PinCodeTextFieldState extends State<PinCodeTextField>
       ]);
     }
     return resultList;
+  }
+
+  void _listenter() {
+    if (widget.useHapticFeedback) {
+      runHapticFeedback();
+    }
+
+    if (isInErrorMode) {
+      setState(() => isInErrorMode = false);
+    }
+
+    _debounceBlink();
+
+    var currentText = _textEditingController!.text;
+
+    if (widget.enabled && _inputList.join("") != currentText) {
+      if (currentText.length >= widget.length) {
+        if (widget.onCompleted != null) {
+          if (currentText.length > widget.length) {
+            // removing extra text longer than the length
+            currentText = currentText.substring(0, widget.length);
+          }
+          //  delay the onComplete event handler to give the onChange event handler enough time to complete
+          Future.delayed(Duration(milliseconds: 300),
+              () => widget.onCompleted!(currentText));
+        }
+
+        if (widget.autoDismissKeyboard) _focusNode!.unfocus();
+      }
+      widget.onChanged(currentText);
+    }
+
+    _setTextToInput(currentText);
   }
 }
 
